@@ -100,8 +100,10 @@ public class JiraCreateReleaseNotes extends BuildWrapper {
         String realRelease = null;
         String releaseNotes = "No Release Notes";
         String realFilter = DEFAULT_FILTER;
+        String realProjectKey = null;
         try {
             realRelease = build.getEnvironment(listener).expand(jiraRelease);
+            realProjectKey = build.getEnvironment(listener).expand(jiraProjectKey);
 
             if ((realRelease == null) || realRelease.isEmpty()) {
                 throw new IllegalArgumentException("Release is Empty");
@@ -113,11 +115,11 @@ public class JiraCreateReleaseNotes extends BuildWrapper {
 
             final JiraSite site = JiraSite.get(build.getProject());
 
-            releaseNotes = site.getReleaseNotesForFixVersion(jiraProjectKey, realRelease, realFilter);
+            releaseNotes = site.getReleaseNotesForFixVersion(realProjectKey, realRelease, realFilter);
 
         } catch (final Exception e) {
             e.printStackTrace(listener.fatalError("Unable to generate release notes for JIRA version %s/%s: %s",
-                    realRelease, jiraProjectKey, e));
+                    realRelease, realProjectKey, e));
             listener.finished(Result.FAILURE);
             return new Environment() {
             };

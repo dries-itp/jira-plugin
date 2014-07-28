@@ -67,9 +67,11 @@ public class JiraReleaseVersionUpdater extends Notifier {
 	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher,
 			BuildListener listener) {
 		String realRelease = "NOT_SET";
+        String realProjectKey = null;
 
 		try {
 			realRelease = build.getEnvironment(listener).expand(jiraRelease);
+            realProjectKey = build.getEnvironment(listener).expand(jiraProjectKey);
 
 			if (realRelease == null || realRelease.isEmpty()) {
 				throw new IllegalArgumentException("Release is Empty");
@@ -78,18 +80,18 @@ public class JiraReleaseVersionUpdater extends Notifier {
 			JiraSite site = getSiteForProject(build.getProject());
 			List<JiraVersion> sameNamedVersions = filter(
 					hasName(equalTo(realRelease)), 
-					site.getVersions(jiraProjectKey));
+					site.getVersions(realProjectKey));
 			
 			if (sameNamedVersions.size() == 1 && sameNamedVersions.get(0).isReleased()) {
 				listener.getLogger().println(
-						String.format(VERSION_ALREADY_RELEASED, realRelease, jiraProjectKey));
+						String.format(VERSION_ALREADY_RELEASED, realRelease, realProjectKey));
 			} else {
-				site.releaseVersion(jiraProjectKey, realRelease);
+				site.releaseVersion(realProjectKey, realRelease);
 			}		
 		} catch (Exception e) {
 			e.printStackTrace(listener.fatalError(
 					"Unable to release jira version %s/%s: %s", realRelease,
-					jiraProjectKey, e));
+					realProjectKey, e));
 			listener.finished(Result.FAILURE);
 			return false;
 		}
