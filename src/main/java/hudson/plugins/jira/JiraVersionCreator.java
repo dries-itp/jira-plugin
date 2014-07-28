@@ -63,9 +63,11 @@ public class JiraVersionCreator extends Notifier {
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
         String realVersion = null;
+        String realProjectKey = null;
 
         try {
             realVersion = build.getEnvironment(listener).expand(jiraVersion);
+            realProjectKey = build.getEnvironment(listener).expand(jiraProjectKey);
 
             if (isEmpty(realVersion)) {
                 throw new IllegalArgumentException("No version specified");
@@ -74,13 +76,13 @@ public class JiraVersionCreator extends Notifier {
             JiraSite site = getSiteForProject(build.getProject());
             List<JiraVersion> sameNamedVersions = filter(
                     hasName(equalTo(realVersion)),
-                    site.getVersions(jiraProjectKey));
+                    site.getVersions(realProjectKey));
 
             if (sameNamedVersions.size() == 0) {
-                site.addVersion(realVersion, jiraProjectKey);
+                site.addVersion(realVersion, realProjectKey);
             } else {
                 listener.getLogger().println(
-                        String.format(VERSION_EXISTS, realVersion, jiraProjectKey));
+                        String.format(VERSION_EXISTS, realVersion, realProjectKey));
             }
         } catch (Exception e) {
             e.printStackTrace(listener.fatalError(
